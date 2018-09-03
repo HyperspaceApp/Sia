@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"errors"
+	"sort"
 
 	"gitlab.com/NebulousLabs/Sia/build"
 	"gitlab.com/NebulousLabs/Sia/modules"
@@ -71,6 +72,34 @@ func (w *Wallet) ConfirmedBalance() (siacoinBalance types.Currency, siafundBalan
 	})
 	return
 }
+
+// getSortedOutputs is a helper function that returns outputs sorted from most recent
+// to oldest
+func (w *Wallet) getSortedOutputs() (so sortedOutputs, err error) {
+	// Collect a value-sorted set of siacoin outputs.
+	err = dbForEachSiacoinOutput(w.dbTx, func(scoid types.SiacoinOutputID, sco types.SiacoinOutput) {
+		so.ids = append(so.ids, scoid)
+		so.outputs = append(so.outputs, sco)
+	})
+	if err != nil {
+		return so, err
+	}
+	// Add all of the unconfirmed outputs as well.
+	for _, upt := range w.unconfirmedProcessedTransactions {
+		for i, sco := range upt.Transaction.SiacoinOutputs {
+			// Determine if the output belongs to the wallet.
+			_, exists := w.keys[sco.UnlockHash]
+			if !exists {
+				continue
+			}
+			so.ids = append(so.ids, upt.Transaction.SiacoinOutputID(uint64(i)))
+			so.outputs = append(so.outputs, sco)
+		}
+	}
+	sort.Sort(sort.Reverse(so))
+	return
+}
+
 
 // UnconfirmedBalance returns the number of outgoing and incoming siacoins in
 // the unconfirmed transaction set. Refund outputs are included in this

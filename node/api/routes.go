@@ -115,6 +115,7 @@ func (api *API) buildHTTPRoutes(requiredUserAgent string, requiredPassword strin
 		router.GET("/wallet/address", RequirePassword(api.walletAddressHandler, requiredPassword))
 		router.GET("/wallet/addresses", api.walletAddressesHandler)
 		router.GET("/wallet/backup", RequirePassword(api.walletBackupHandler, requiredPassword))
+		router.GET("/wallet/build/transaction", api.walletBuildTransactionHandler)
 		router.POST("/wallet/init", RequirePassword(api.walletInitHandler, requiredPassword))
 		router.POST("/wallet/init/seed", RequirePassword(api.walletInitSeedHandler, requiredPassword))
 		router.POST("/wallet/lock", RequirePassword(api.walletLockHandler, requiredPassword))

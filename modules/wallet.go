@@ -125,6 +125,13 @@ type (
 	//
 	// Transaction builders are not thread safe.
 	TransactionBuilder interface {
+		// FundSiacoinsForOutputs will aggregate enough inputs to cover the
+		// total value of the outputs and the miner fee if any. A refund
+		// output will be generated if necessary. All the outputs will be
+		// added to the transaction being built along with a miner fee if
+		// one is passed. The transaction will not be signed.
+		FundSiacoinsForOutputs(outputs []types.SiacoinOutput, fee types.Currency) error
+
 		// FundSiacoins will add a siacoin input of exactly 'amount' to the
 		// transaction. A parent transaction may be needed to achieve an input
 		// with the correct value. The siacoin input will not be signed until
@@ -401,6 +408,16 @@ type (
 		// RegisterTransaction takes a transaction and its parents and returns
 		// a TransactionBuilder which can be used to expand the transaction.
 		RegisterTransaction(t types.Transaction, parents []types.Transaction) (TransactionBuilder, error)
+
+		// NewTransaction takes a list of outputs and a tx fee and
+		// returns an unsigned transaction constructed from the wallet's
+		// unspent outputs
+		NewTransaction(outputs []types.SiacoinOutput, fee types.Currency) (types.Transaction, error)
+
+		// NewTransaction takes a destination unlock hash, transfer amount,
+		// and a tx fee, and returns an unsigned transaction constructed from the
+		// wallet's unspent outputs
+		NewTransactionForAddress(dest types.UnlockHash, amount, fee types.Currency) (types.Transaction, error)
 
 		// Rescanning reports whether the wallet is currently rescanning the
 		// blockchain.
